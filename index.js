@@ -10,7 +10,7 @@
  for you to use if you need it!
  */
 
-const allWagesFor = function () {
+/*const allWagesFor = function () {
     const eligibleDates = this.timeInEvents.map(function (e) {
         return e.date
     })
@@ -21,67 +21,95 @@ const allWagesFor = function () {
 
     return payable
 }
-function createEmployeeRecord([firstName, familyName, title, payPerHour]) {
+*/
+
+// 1. createEmployeeRecord
+// input: [firstName, familyName, title, payPerHour]
+// output: employee object with timeInEvents and timeOutEvents arrays
+function createEmployeeRecord(arr) {
   return {
-    firstName,
-    familyName,
-    title,
-    payPerHour,
+    firstName: arr[0],
+    familyName: arr[1],
+    title: arr[2],
+    payPerHour: arr[3],
     timeInEvents: [],
     timeOutEvents: []
   };
 }
 
-function createEmployeeRecords(data) {
-  return data.map(createEmployeeRecord);
+// 2. createEmployeeRecords
+// input: array of arrays (each subarray like above)
+// output: array of employee records
+function createEmployeeRecords(arrays) {
+  return arrays.map(createEmployeeRecord);
 }
 
-function createTimeInEvent(emp, dateTime) {
-  if (!dateTime) throw new Error("createTimeInEvent requires a dateTime string");
-  const [date, hour] = dateTime.split(" ");
-  emp.timeInEvents.push({
+// 3. createTimeInEvent
+// input: employee record (this), dateStamp "YYYY-MM-DD HHMM"
+// adds a TimeIn event object to timeInEvents, returns updated record
+function createTimeInEvent(dateStamp) {
+  const [date, hour] = dateStamp.split(" ");
+  this.timeInEvents.push({
     type: "TimeIn",
-    date,
-    hour: parseInt(hour, 10)
+    hour: parseInt(hour, 10),
+    date: date
   });
-  return emp;
+  return this;
 }
 
-function createTimeOutEvent(emp, dateTime) {
-  if (!dateTime) throw new Error("createTimeOutEvent requires a dateTime string");
-  const [date, hour] = dateTime.split(" ");
-  emp.timeOutEvents.push({
+// 4. createTimeOutEvent
+// input: employee record (this), dateStamp "YYYY-MM-DD HHMM"
+// adds a TimeOut event object to timeOutEvents, returns updated record
+function createTimeOutEvent(dateStamp) {
+  const [date, hour] = dateStamp.split(" ");
+  this.timeOutEvents.push({
     type: "TimeOut",
-    date,
-    hour: parseInt(hour, 10)
+    hour: parseInt(hour, 10),
+    date: date
   });
-  return emp;
+  return this;
 }
 
-function hoursWorkedOnDate(emp, date) {
-  const inEvent = emp.timeInEvents.find(e => e.date === date);
-  const outEvent = emp.timeOutEvents.find(e => e.date === date);
+// 5. hoursWorkedOnDate
+// input: date "YYYY-MM-DD"
+// returns hours worked that day as integer
+function hoursWorkedOnDate(date) {
+  const inEvent = this.timeInEvents.find(e => e.date === date);
+  const outEvent = this.timeOutEvents.find(e => e.date === date);
   return (outEvent.hour - inEvent.hour) / 100;
 }
 
-function wagesEarnedOnDate(emp, date) {
-  return hoursWorkedOnDate(emp, date) * emp.payPerHour;
+// 6. wagesEarnedOnDate
+// input: date "YYYY-MM-DD"
+// returns pay owed as number
+function wagesEarnedOnDate(date) {
+  return hoursWorkedOnDate.call(this, date) * this.payPerHour;
 }
 
-function computeAllWagesFor(emp) {
-  return emp.timeInEvents.reduce((total, e) => {
-    return total + wagesEarnedOnDate(emp, e.date);
-  }, 0);
+// 7. allWagesFor
+// no input, returns sum of wages for all dates worked by employee record (this)
+function allWagesFor() {
+  // collect all unique dates from timeInEvents
+  const dates = this.timeInEvents.map(e => e.date);
+  // sum wages for all dates
+  return dates.reduce((total, d) => total + wagesEarnedOnDate.call(this, d), 0);
 }
 
-function calculatePayroll(employees) {
-  return employees.reduce((sum, emp) => sum + allWagesFor(emp), 0);
+// 8. findEmployeeByFirstName
+// input: array of employee records, firstName string
+// returns employee record or undefined
+function findEmployeeByFirstName(srcArray, firstName) {
+  return srcArray.find(emp => emp.firstName === firstName);
 }
 
-function findEmployeeByFirstName(collection, firstNameString) {
-  return collection.find(emp => emp.firstName === firstNameString);
+// 9. calculatePayroll
+// input: array of employee records
+// returns total payroll owed to all employees
+function calculatePayroll(employeeRecords) {
+  return employeeRecords.reduce((total, emp) => total + allWagesFor.call(emp), 0);
 }
 
+// Export functions for test harness (if using Node.js)
 if (typeof module !== "undefined") {
   module.exports = {
     createEmployeeRecord,
@@ -90,8 +118,8 @@ if (typeof module !== "undefined") {
     createTimeOutEvent,
     hoursWorkedOnDate,
     wagesEarnedOnDate,
-    allWagesFor:computeAllWagesFor,
-    calculatePayroll,
+    allWagesFor,
     findEmployeeByFirstName,
+    calculatePayroll
   };
 }
